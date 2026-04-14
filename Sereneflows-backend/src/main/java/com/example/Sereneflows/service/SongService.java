@@ -8,13 +8,14 @@ import java.util.regex.*;
 public class SongService {
     public List<String> extractSongs(String desc)
     {
-        List<String> songs = new ArrayList<>();
+        Set<String> songs = new LinkedHashSet<>();
         Pattern pattern = Pattern.compile("\\d{1,2}:\\d{2}\\s+(.+)");
         Matcher matcher = pattern.matcher(desc);
         while (matcher.find()) {
-            songs.add(matcher.group(1));
+            String  song = matcher.group(1);
+            songs.add(cleanSong(song));
         }
-        return songs;
+        return new ArrayList<>(songs);
     }
     public String extractVideo(String url){
         String[] parts = url.split("v=");
@@ -23,5 +24,15 @@ public class SongService {
             return parts[1];
         }
         return "";
+    }
+    private String cleanSong(String song)
+    {
+        return song
+                .replaceAll("\\(.*?\\)","")
+                .replaceAll("\\[.*?\\]","")
+                .replaceAll("(?i)but it's lofi","")
+                .replaceAll("(?i)lofi", "")
+                .replaceAll("(?i)lyrics", "")
+                .trim();
     }
 }
