@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Java / Maven / Gradle
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Node / Frontend
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/out/
+**/coverage/
+
+# Env files (keep examples)
+.env
+.env.*
+!.env.example
+
+# IDEs
+**/.idea/
+**/*.iml
+**/.vscode/
+
+# OS
+Thumbs.db
