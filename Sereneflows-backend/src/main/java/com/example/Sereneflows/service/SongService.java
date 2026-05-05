@@ -9,19 +9,22 @@ public class SongService {
     public List<String> extractSongs(String desc)
     {
         Set<String> songs = new LinkedHashSet<>();
-        Pattern pattern = Pattern.compile("\\d{1,2}:\\d{2}\\s+(.+)");
+
+        Pattern pattern = Pattern.compile("\\d{1,2}:\\d{2}\\s*-\\s*\\d{1,2}:\\d{2}\\s+(.+)");
         Matcher matcher = pattern.matcher(desc);
+
         while (matcher.find()) {
-            String  song = matcher.group(1);
+            String song = matcher.group(1);
             songs.add(cleanSong(song));
         }
+
         return new ArrayList<>(songs);
     }
     public String extractVideo(String url){
         String[] parts = url.split("v=");
         if(parts.length > 1)
         {
-            return parts[1];
+            return parts[1].split("&")[0];
         }
         return "";
     }

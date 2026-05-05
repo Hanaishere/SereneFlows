@@ -1,5 +1,8 @@
 package com.example.Sereneflows.controller;
 
+import com.example.Sereneflows.service.SongService;
+import com.example.Sereneflows.service.YouTubeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.util.*;
@@ -22,6 +25,10 @@ public class SpotifyController {
     @Value("${spotify.redirect.uri}")
     private String redirectUri;
 
+    @Autowired
+    private SongService songService;
+    @Autowired
+    private YouTubeService youTubeService;
 
     @GetMapping("/login")
     public String login() {
@@ -112,5 +119,78 @@ public class SpotifyController {
         }
 
         return result;
+    }
+    @GetMapping("/convert")
+    public List<Map<String, String>> convert(
+            @RequestParam String url,
+            @RequestParam String token) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        List<Map<String, String>> finalResult = new ArrayList<>();
+
+
+        String videoId = songService.extractVideo(url);
+        System.out.println("Video ID: " + videoId);
+
+
+        String description = youTubeService.getVideoDescription(videoId);
+        System.out.println("Description: " + description);
+
+
+        List<String> songs = songService.extractSongs(description);
+        System.out.println("Extracted songs: " + songs);
+
+
+        for (String song : songs) {
+
+            try {
+                String searchUrl = "https://api.spotify.com/v1/search?q="
+                        + URLEncoder.encode(song, StandardCharsets.UTF_8)
+                        + "&type=track&limit=1";
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.set("Authorization", "Bearer " + token);
+
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                ResponseEntity<Map> response = restTemplate.exchange(
+                        searchUrl,
+                        HttpMethod.GET,
+                        entity,
+                        Map.class
+                );
+
+                Map body = response.getBody();
+                Map tracks = (Map) body.get("tracks");
+                List<Map<String, Object>> items =
+                        (List<Map<String, Object>>) tracks.get("items");
+
+                if (items != null && !items.isEmpty()) {
+                    Map<String, Object> item = items.get(0);
+
+                    String name = (String) item.get("name");
+
+                    List<Map<String, Object>> artists =
+                            (List<Map<String, Object>>) item.get("artists");
+                    String artistName = (String) artists.get(0).get("name");
+
+                    Map externalUrls = (Map) item.get("external_urls");
+                    String spotifyUrl = (String) externalUrls.get("spotify");
+
+                    Map<String, String> resultItem = new HashMap<>();
+                    resultItem.put("youtubeSong", song);
+                    resultItem.put("spotifyMatch", name);
+                    resultItem.put("artist", artistName);
+                    resultItem.put("url", spotifyUrl);
+
+                    finalResult.add(resultItem);
+                }
+
+            } catch (Exception e) {
+                System.out.println("Error processing song: " + song);
+            }
+        }
+
+        return finalResult;
     }
 }
