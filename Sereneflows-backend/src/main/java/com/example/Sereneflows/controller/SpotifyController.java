@@ -8,8 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 public class SpotifyController {
@@ -69,27 +68,49 @@ public class SpotifyController {
 
 
     @GetMapping("/search")
-    public String searchSong(@RequestParam String query, @RequestParam String token) {
+    public List<Map<String, String>> searchSong(
+            @RequestParam String query,
+            @RequestParam String token) {
+
+        String url = "https://api.spotify.com/v1/search?q=" + query + "&type=track&limit=5";
 
         RestTemplate restTemplate = new RestTemplate();
 
-        try {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
 
-            String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            String url = "https://api.spotify.com/v1/search?q=" + encodedQuery + "&type=track&limit=1";
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                Map.class
+        );
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
+        Map body = response.getBody();
+        Map tracks = (Map) body.get("tracks");
+        List<Map<String, Object>> items = (List<Map<String, Object>>) tracks.get("items");
 
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+        List<Map<String, String>> result = new ArrayList<>();
 
-            Map response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class).getBody();
+        for (Map<String, Object> item : items) {
+            String name = (String) item.get("name");
 
-            return response.toString();
+            List<Map<String, Object>> artists = (List<Map<String, Object>>) item.get("artists");
+            String artistName = (String) artists.get(0).get("name");
 
-        } catch (Exception e) {
-            return "Error searching song: " + e.getMessage();
+            Map externalUrls = (Map) item.get("external_urls");
+            String spotifyUrl = (String) externalUrls.get("spotify");
+
+            Map<String, String> songData = new HashMap<>();
+            songData.put("name", name);
+            songData.put("artist", artistName);
+            songData.put("url", spotifyUrl);
+
+            result.add(songData);
         }
+
+        return result;
     }
 }
