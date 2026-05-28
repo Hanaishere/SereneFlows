@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@CrossOrigin("*")
 @RestController
 public class SpotifyController {
 
@@ -122,8 +123,9 @@ public class SpotifyController {
     }
     @GetMapping("/convert")
     public List<Map<String, String>> convert(
-            @RequestParam String url,
-            @RequestParam String token) {
+            @RequestParam String url) {
+        String token = "BQC3bIWq5beWa6K1RACUJtN7dsBAzU73LOCGOJbkIKz5ruKyTS-8FK7iGWmJ_3jmoyDk3OKWs-gnln94Hheso1Enju6PJLyvGkECdDbtlg2XugLAREw5kn62RTBnQtDlO4hKYr_cIppx-2U2zKNBpOgBpBgW50LN9OPCgXi9W5zibVSSSTXyLY5Y_6IMP3MGgUK6Njbcx7jUyItClwWYmlz7VoB4qdfyu8f3WzBoAbfliHGAsPfBhqS2teIQ3ik_BJRRUYW1vwbvDp5tY5o";
+
 
         RestTemplate restTemplate = new RestTemplate();
         List<Map<String, String>> finalResult = new ArrayList<>();
